@@ -1,7 +1,12 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"log"
+	"os"
+	"path/filepath"
+	"slices"
 	"strings"
 )
 
@@ -10,9 +15,59 @@ const LAST_ENTRY = "└──"
 const BAR = "│"
 const IDENTATION = 3
 
+var (
+	d = flag.String("d", ".", "directory")
+)
+
+var ignorables = []string{".git"}
+
 func main() {
-	line := build_line(0, "main/", false)
-	fmt.Println(line)
+	flag.Parse()
+	*d = get_current_dir(*d)
+	fmt.Println(*d)
+	build_directory_tree(0, *d)
+}
+
+func get_current_dir(dir string) string {
+	if dir == "." || dir == "./" {
+		pwd, _ := os.Getwd()
+		dir = pwd
+	}
+
+	return dir
+}
+
+func build_directory_tree(depth int, dir string) {
+	entries, err := os.ReadDir(dir)
+
+	if err != nil {
+		log.Fatalln("Error reading directory " + dir)
+	}
+
+	entries_len := len(entries)
+	last_entry := false
+
+	for i, e := range entries {
+		suffix := ""
+		if slices.Contains(ignorables, e.Name()) {
+			continue
+		}
+
+		if i == entries_len-1 {
+			last_entry = true
+		}
+
+		if e.IsDir() {
+			suffix = "/"
+		}
+
+		fmt.Println(build_line(depth, e.Name()+suffix, last_entry))
+
+		if e.IsDir() {
+			dir_path := filepath.Join(dir, e.Name())
+			build_directory_tree(depth+1, dir_path)
+		}
+	}
 }
 
 func build_line(depth int, entry_name string, last_entry bool) string {
