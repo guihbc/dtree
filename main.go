@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"slices"
@@ -28,11 +29,17 @@ func main() {
 }
 
 func build_directory_tree(depth int, dir string) {
-	entries, _ := os.ReadDir(dir)
+	entries, err := os.ReadDir(dir)
+
+	if err != nil {
+		log.Fatalln("Error reading directory " + dir)
+	}
+
 	entries_len := len(entries)
 	last_entry := false
 
 	for i, e := range entries {
+		suffix := ""
 		if slices.Contains(ignorables, e.Name()) {
 			continue
 		}
@@ -41,7 +48,11 @@ func build_directory_tree(depth int, dir string) {
 			last_entry = true
 		}
 
-		fmt.Println(build_line(depth, e.Name(), last_entry))
+		if e.IsDir() {
+			suffix = "/"
+		}
+
+		fmt.Println(build_line(depth, e.Name()+suffix, last_entry))
 
 		if e.IsDir() {
 			dir_path := filepath.Join(dir, e.Name())
