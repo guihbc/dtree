@@ -23,9 +23,18 @@ var ignorables = []string{".git"}
 
 func main() {
 	flag.Parse()
-	splited_dir := strings.Split(*d, "/")
-	fmt.Println(splited_dir[len(splited_dir)-1])
+	*d = get_current_dir(*d)
+	fmt.Println(*d)
 	build_directory_tree(0, *d)
+}
+
+func get_current_dir(dir string) string {
+	if dir == "." || dir == "./" {
+		pwd, _ := os.Getwd()
+		dir = pwd
+	}
+
+	return dir
 }
 
 func build_directory_tree(depth int, dir string) {
